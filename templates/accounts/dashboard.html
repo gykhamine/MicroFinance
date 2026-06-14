@@ -1,0 +1,188 @@
+{% extends "base/base.html" %}
+{% block title %}Tableau de bord{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+{% block extra_css %}<style>canvas{max-height:240px;}</style>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Bonjour, {{ user.first_name }} {{ user.get_role_icon }}</h1><div class="breadcrumb">MicroFinance ERP — {% now "d/m/Y" %}</div></div>
+</div>
+
+{% if user.role == 'client' %}
+<!-- ===== DASHBOARD CLIENT ===== -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px;">
+  {% for compte in comptes %}
+  <div class="solde-card">
+    <div class="solde-label">{{ compte.type_compte.nom }}</div>
+    <div class="solde-amount">{{ compte.solde|floatformat:0 }} <span style="font-size:16px;opacity:.7;">FCFA</span></div>
+    <div style="font-size:12px;opacity:.65;margin-top:4px;font-family:monospace;">{{ compte.numero }}</div>
+    <div style="margin-top:14px;display:flex;gap:8px;">
+      <a href="/transactions/depot/" style="background:rgba(255,255,255,0.15);color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;">💰 Dépôt</a>
+      <a href="/transactions/retrait/" style="background:rgba(255,255,255,0.15);color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;">💸 Retrait</a>
+    </div>
+  </div>
+  {% empty %}
+  <div class="card"><div class="card-body text-muted">Aucun compte actif.</div></div>
+  {% endfor %}
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><h5>🃏 Mes cartes 31</h5><a href="/cartes/" class="btn btn-outline btn-sm">Voir tout</a></div>
+    <div class="card-body">
+      {% for carte in cartes_actives %}
+      <div style="padding:12px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;font-family:monospace;color:var(--gold);">{{ carte.numero }}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">{{ carte.cases_remplies }}/31 cases — {{ carte.total_depose|floatformat:0 }} FCFA déposés</div>
+          </div>
+          <span class="badge badge-{{ carte.statut }}">{{ carte.get_statut_display }}</span>
+        </div>
+        <div class="progress mt-1">
+          <div class="progress-bar" style="width:{{ carte.progression_pct }}%;background:var(--gold);"></div>
+        </div>
+      </div>
+      {% empty %}<p class="text-muted">Aucune carte active. <a href="/cartes/">Voir →</a></p>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>📄 Échéances à venir</h5></div>
+    <div class="card-body">
+      {% for e in echeances_proches %}
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:600;font-size:13px;">Crédit #{{ e.demande.pk }} — Éch. {{ e.numero }}</div>
+          <div style="font-size:12px;color:var(--text-muted);">{{ e.date_echeance|date:"d/m/Y" }}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;">{{ e.montant_total|floatformat:0 }} FCFA</div>
+          <span class="badge badge-{{ e.statut }}">{{ e.get_statut_display }}</span>
+        </div>
+      </div>
+      {% empty %}<p class="text-muted">Aucune échéance prochaine.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card mt-2">
+  <div class="card-header"><h5>📋 Dernières transactions</h5></div>
+  <table class="table-mf">
+    <thead><tr><th>Date</th><th>Type</th><th>Compte</th><th>Montant</th><th>Frais</th><th>Solde après</th></tr></thead>
+    <tbody>
+      {% for t in transactions_recentes %}
+      <tr>
+        <td style="font-size:12px;">{{ t.date|date:"d/m/Y H:i" }}</td>
+        <td><span class="badge badge-{{ t.type_transaction }}">{{ t.get_type_transaction_display }}</span></td>
+        <td style="font-family:monospace;font-size:12px;">{{ t.compte.numero }}</td>
+        <td style="font-weight:700;{% if 'retrait' in t.type_transaction or 'debit' in t.type_transaction or 'frais' in t.type_transaction %}color:var(--danger);{% else %}color:var(--success);{% endif %}">
+          {% if 'retrait' in t.type_transaction or 'debit' in t.type_transaction %}−{% else %}+{% endif %}{{ t.montant|floatformat:0 }}
+        </td>
+        <td style="font-size:12px;color:var(--text-muted);">{% if t.frais > 0 %}{{ t.frais|floatformat:0 }}{% else %}—{% endif %}</td>
+        <td style="font-weight:600;">{{ t.solde_apres|floatformat:0 }} FCFA</td>
+      </tr>
+      {% empty %}<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">Aucune transaction.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<!-- ===== DASHBOARD STAFF ===== -->
+<div class="grid-stats mb-3">
+  <div class="stat-card"><div class="stat-icon bg-primary-soft">👥</div><div><div class="stat-value">{{ nb_clients }}</div><div class="stat-label">Clients actifs</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-info-soft">🏦</div><div><div class="stat-value">{{ nb_comptes }}</div><div class="stat-label">Comptes ouverts</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-success-soft">💰</div><div><div class="stat-value" style="font-size:16px;">{{ total_depots|floatformat:0 }}</div><div class="stat-label">FCFA en dépôt</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-gold-soft">🃏</div><div><div class="stat-value">{{ cartes_actives }}</div><div class="stat-label">Cartes 31 actives</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-warning-soft">📄</div><div><div class="stat-value">{{ credits_en_cours }}</div><div class="stat-label">Crédits en cours</div></div></div>
+  {% if echeances_retard > 0 %}
+  <div class="stat-card" style="border-left:4px solid var(--danger);">
+    <div class="stat-icon bg-danger-soft">⚠️</div>
+    <div><div class="stat-value" style="color:var(--danger);">{{ echeances_retard }}</div><div class="stat-label">Échéances en retard</div></div>
+  </div>
+  {% endif %}
+  <div class="stat-card"><div class="stat-icon bg-info-soft">📊</div><div><div class="stat-value">{{ transactions_aujourd_hui }}</div><div class="stat-label">Transactions du jour</div></div></div>
+</div>
+
+<div class="grid-2">
+  <!-- Actions rapides caissier -->
+  {% if user.role in 'caissier,banque,directeur' %}
+  <div class="card">
+    <div class="card-header"><h5>⚡ Actions rapides</h5></div>
+    <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <a href="/transactions/depot/" class="btn btn-success" style="flex-direction:column;padding:16px;gap:4px;"><span style="font-size:22px;">💰</span><span>Dépôt</span></a>
+      <a href="/transactions/retrait/" class="btn btn-danger" style="flex-direction:column;padding:16px;gap:4px;"><span style="font-size:22px;">💸</span><span>Retrait</span></a>
+      <a href="/transactions/transfert/" class="btn btn-primary" style="flex-direction:column;padding:16px;gap:4px;"><span style="font-size:22px;">🔄</span><span>Transfert</span></a>
+      <a href="/clients/nouveau/" class="btn btn-outline" style="flex-direction:column;padding:16px;gap:4px;"><span style="font-size:22px;">👤</span><span>Nouveau client</span></a>
+      <a href="/cartes/creer/" class="btn btn-gold" style="flex-direction:column;padding:16px;gap:4px;"><span style="font-size:22px;">🃏</span><span>Carte 31</span></a>
+      <a href="/credits/demande/" class="btn btn-outline" style="flex-direction:column;padding:16px;gap:4px;"><span style="font-size:22px;">📄</span><span>Demande crédit</span></a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Échéances du jour -->
+  {% if echeances_aujourd_hui %}
+  <div class="card">
+    <div class="card-header"><h5>📅 Échéances aujourd'hui</h5></div>
+    <div class="card-body" style="padding:0;">
+      <table class="table-mf">
+        <thead><tr><th>Client</th><th>Montant</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+          {% for e in echeances_aujourd_hui %}
+          <tr>
+            <td><div style="font-weight:600;">{{ e.demande.client.utilisateur.get_full_name }}</div><div style="font-size:11px;color:var(--text-muted);">Crédit #{{ e.demande.pk }} — Éch. {{ e.numero }}</div></td>
+            <td style="font-weight:700;">{{ e.montant_total|floatformat:0 }} FCFA</td>
+            <td><span class="badge badge-{{ e.statut }}">{{ e.get_statut_display }}</span></td>
+            <td><a href="/credits/echeance/{{ e.pk }}/rembourser/" class="btn btn-success btn-sm">Encaisser</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Demandes crédit en attente -->
+  {% if demandes_en_attente %}
+  <div class="card">
+    <div class="card-header"><h5>📄 Demandes de crédit</h5><a href="/credits/" class="btn btn-outline btn-sm">Voir tout</a></div>
+    <div class="card-body" style="padding:0;">
+      <table class="table-mf">
+        <thead><tr><th>Client</th><th>Montant</th><th>Type</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+          {% for c in demandes_en_attente %}
+          <tr>
+            <td><div style="font-weight:600;">{{ c.client.utilisateur.get_full_name }}</div></td>
+            <td>{{ c.montant_demande|floatformat:0 }} FCFA</td>
+            <td style="font-size:12px;">{{ c.type_credit.nom }}</td>
+            <td><span class="badge badge-{{ c.statut }}">{{ c.get_statut_display }}</span></td>
+            <td><a href="/credits/{{ c.pk }}/instruire/" class="btn btn-primary btn-sm">Instruire</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Dernières transactions -->
+  <div class="card">
+    <div class="card-header"><h5>📋 Transactions récentes</h5><a href="/transactions/journal/" class="btn btn-outline btn-sm">Journal</a></div>
+    <div class="card-body" style="padding:0;">
+      <table class="table-mf">
+        <thead><tr><th>Heure</th><th>Client</th><th>Type</th><th>Montant</th><th>Frais</th></tr></thead>
+        <tbody>
+          {% for t in transactions_recentes %}
+          <tr>
+            <td style="font-size:12px;white-space:nowrap;">{{ t.date|time:"H:i" }}</td>
+            <td><div style="font-weight:600;font-size:13px;">{{ t.compte.client.utilisateur.get_full_name }}</div><div style="font-size:11px;color:var(--text-muted);">{{ t.compte.numero }}</div></td>
+            <td><span class="badge badge-{{ t.type_transaction }}">{{ t.get_type_transaction_display }}</span></td>
+            <td style="font-weight:700;">{{ t.montant|floatformat:0 }} FCFA</td>
+            <td style="color:var(--text-muted);font-size:12px;">{% if t.frais > 0 %}{{ t.frais|floatformat:0 }}{% else %}—{% endif %}</td>
+          </tr>
+          {% empty %}<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">Aucune transaction aujourd'hui.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

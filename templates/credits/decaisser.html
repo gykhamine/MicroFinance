@@ -1,0 +1,25 @@
+{% extends "base/base.html" %}
+{% block title %}Décaissement{% endblock %}
+{% block page_title %}Décaissement du crédit{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>💰 Décaissement — Crédit #{{ credit.pk }}</h1></div><a href="/credits/{{ credit.pk }}/" class="btn btn-outline">← Retour</a></div>
+<div class="card" style="max-width:600px;">
+  <div class="card-header"><h5>Confirmer le décaissement</h5></div>
+  <div class="card-body">
+    <div style="background:var(--primary-light);border-radius:10px;padding:20px;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;"><span>Client</span><strong>{{ credit.client.utilisateur.get_full_name }}</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;"><span>Compte crédité</span><strong>{{ credit.compte_decaissement.numero }}</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;"><span>Durée</span><strong>{{ credit.duree_mois }} mois</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;"><span>Mensualité</span><strong>{{ credit.mensualite|floatformat:0 }} FCFA</strong></div>
+      <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:700;color:var(--primary);border-top:1px solid var(--border);padding-top:10px;margin-top:8px;">
+        <span>Montant à décaisser</span><span>{{ credit.montant_accorde|floatformat:0 }} FCFA</span>
+      </div>
+    </div>
+    <div class="alert alert-warning">⚠️ Le tableau d'amortissement sera généré automatiquement avec {{ credit.duree_mois }} échéances mensuelles.</div>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-success btn-lg w-100">✅ Confirmer et décaisser</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base/base.html" %}
+{% block title %}Rapports{% endblock %}
+{% block page_title %}Rapports & Statistiques{% endblock %}
+{% block extra_css %}<style>canvas{max-height:240px;}</style>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>📈 Rapports & Statistiques</h1><div class="breadcrumb">30 derniers jours</div></div>
+  <div style="display:flex;gap:8px;">
+    <a href="/rapports/credits/" class="btn btn-outline">📄 Crédits</a>
+    <a href="/rapports/cartes/" class="btn btn-outline">🃏 Cartes 31</a>
+    <a href="/rapports/pdf/transactions/" class="btn btn-primary">⬇ PDF Journal</a>
+    <a href="/rapports/pdf/credits/" class="btn btn-primary">⬇ PDF Crédits</a>
+    <a href="/rapports/pdf/cartes/" class="btn btn-gold">⬇ PDF Cartes</a>
+  </div>
+</div>
+
+<div class="grid-stats mb-3">
+  <div class="stat-card"><div class="stat-icon bg-primary-soft">👥</div><div><div class="stat-value">{{ stats.nb_clients }}</div><div class="stat-label">Clients actifs</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-info-soft">🏦</div><div><div class="stat-value">{{ stats.nb_comptes }}</div><div class="stat-label">Comptes ouverts</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-success-soft">💰</div><div><div class="stat-value" style="font-size:16px;">{{ stats.total_epargne|floatformat:0 }}</div><div class="stat-label">FCFA en dépôt</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-warning-soft">📄</div><div><div class="stat-value">{{ stats.credits_en_cours }}</div><div class="stat-label">Crédits actifs</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-primary-soft">💳</div><div><div class="stat-value" style="font-size:16px;">{{ stats.encours_credit|floatformat:0 }}</div><div class="stat-label">FCFA encours crédit</div></div></div>
+  {% if stats.echeances_retard > 0 %}
+  <div class="stat-card" style="border-left:4px solid var(--danger);"><div class="stat-icon bg-danger-soft">⚠️</div><div><div class="stat-value" style="color:var(--danger);">{{ stats.echeances_retard }}</div><div class="stat-label">Échéances en retard</div></div></div>
+  {% endif %}
+  <div class="stat-card"><div class="stat-icon bg-gold-soft">🃏</div><div><div class="stat-value">{{ stats.cartes_actives }}</div><div class="stat-label">Cartes 31 actives</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-gold-soft">🏁</div><div><div class="stat-value" style="font-size:16px;">{{ stats.cartes_cloturees }}</div><div class="stat-label">Cartes clôturées</div></div></div>
+</div>
+
+<div class="grid-2 mb-3">
+  <div class="card">
+    <div class="card-header"><h5>📊 Dépôts quotidiens (30 jours)</h5></div>
+    <div class="card-body"><canvas id="chartDepots"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>🔵 Répartition des transactions</h5></div>
+    <div class="card-body"><canvas id="chartTypes"></canvas></div>
+  </div>
+</div>
+
+<div class="grid-2 mb-3">
+  <div class="card">
+    <div class="card-header"><h5>📄 Encours crédit par type</h5></div>
+    <div class="card-body"><canvas id="chartCredits"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>💵 Flux financiers (30 jours)</h5></div>
+    <div class="card-body">
+      <div style="display:grid;gap:14px;padding:10px 0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#e8f5e9;border-radius:8px;">
+          <div><div style="font-size:12px;color:var(--text-muted);">Total dépôts</div><div style="font-size:20px;font-weight:700;color:var(--success);">{{ stats.depots_mois|floatformat:0 }} FCFA</div></div>
+          <span style="font-size:28px;">💰</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#ffebee;border-radius:8px;">
+          <div><div style="font-size:12px;color:var(--text-muted);">Total retraits</div><div style="font-size:20px;font-weight:700;color:var(--danger);">{{ stats.retraits_mois|floatformat:0 }} FCFA</div></div>
+          <span style="font-size:28px;">💸</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--gold-light);border-radius:8px;">
+          <div><div style="font-size:12px;color:var(--text-muted);">Frais perçus</div><div style="font-size:20px;font-weight:700;color:var(--gold);">{{ stats.frais_mois|floatformat:0 }} FCFA</div></div>
+          <span style="font-size:28px;">⚙️</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--primary-light);border-radius:8px;">
+          <div><div style="font-size:12px;color:var(--text-muted);">Transactions totales</div><div style="font-size:20px;font-weight:700;color:var(--primary);">{{ stats.txns_mois }}</div></div>
+          <span style="font-size:28px;">📋</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const daily = {{ daily_data|safe }};
+const typeC = {{ type_counts|safe }};
+const encours = {{ encours_credit|safe }};
+const pal = ['#0B3D91','#C9A84C','#E65100','#2E7D32','#C62828','#1565C0','#7b1fa2'];
+
+// Dépôts
+const days = Object.keys(daily);
+new Chart(document.getElementById('chartDepots'), {
+  type: 'bar',
+  data: { labels: days.map(d => d.slice(5)), datasets:[{ label:'FCFA', data: days.map(d=>daily[d]), backgroundColor:'#0B3D91', borderRadius:5 }] },
+  options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+});
+
+// Types
+const tLabels = Object.keys(typeC);
+if (tLabels.length) {
+  new Chart(document.getElementById('chartTypes'), {
+    type: 'doughnut',
+    data: { labels: tLabels, datasets:[{ data: tLabels.map(k=>typeC[k]), backgroundColor: pal, borderWidth:2 }] },
+    options: { responsive:true, plugins:{legend:{position:'right'}} }
+  });
+}
+
+// Encours crédit
+const cLabels = Object.keys(encours);
+if (cLabels.length) {
+  new Chart(document.getElementById('chartCredits'), {
+    type: 'bar',
+    data: { labels: cLabels, datasets:[{ label:'FCFA', data: cLabels.map(k=>encours[k]), backgroundColor: pal, borderRadius:5 }] },
+    options: { responsive:true, indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}} }
+  });
+}
+</script>
+{% endblock %}

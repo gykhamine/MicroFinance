@@ -1,0 +1,24 @@
+{% extends "base/base.html" %}
+{% block title %}Versement{% endblock %}
+{% block page_title %}Nouveau versement{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🪙 Versement — {{ plan.nom }}</h1><div class="breadcrumb">{{ plan.client }} • Progression : {{ plan.progression_pct }}%</div></div><a href="/epargne/{{ plan.pk }}/" class="btn btn-outline">← Retour</a></div>
+<div class="card" style="max-width:500px;">
+  <div class="card-header"><h5>Enregistrer un versement</h5></div>
+  <div class="card-body">
+    <div style="background:var(--primary-light);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;">
+      <div style="display:flex;justify-content:space-between;"><span>Objectif</span><strong>{{ plan.objectif|floatformat:0 }} FCFA</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;"><span>Déjà versé</span><strong style="color:var(--success);">{{ plan.total_verse|floatformat:0 }} FCFA</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;"><span>Montant habituel</span><strong>{{ plan.montant_verse|floatformat:0 }} FCFA</strong></div>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3"><label class="form-label">Montant du versement (FCFA) *</label>
+        <input type="number" name="montant" class="form-control" required min="1" step="1"
+          value="{{ plan.montant_verse|floatformat:0 }}" style="font-size:22px;text-align:center;font-weight:700;">
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg w-100">✅ Enregistrer le versement</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

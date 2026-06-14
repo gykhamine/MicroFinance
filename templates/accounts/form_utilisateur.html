@@ -1,0 +1,34 @@
+{% extends "base/base.html" %}
+{% block title %}Nouveau compte{% endblock %}
+{% block page_title %}Créer un compte utilisateur{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🔑 Nouveau compte</h1></div><a href="/utilisateurs/" class="btn btn-outline">← Retour</a></div>
+<div class="card" style="max-width:600px;">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="grid-2" style="gap:14px;">
+        <div><label class="form-label">Prénom *</label><input type="text" name="first_name" class="form-control" required></div>
+        <div><label class="form-label">Nom *</label><input type="text" name="last_name" class="form-control" required></div>
+        <div><label class="form-label">Login *</label><input type="text" name="username" class="form-control" required></div>
+        <div>
+          <label class="form-label">Rôle *</label>
+          <select name="role" class="form-select" required>
+            <option value="banque">🏦 Agent Bancaire</option>
+            <option value="caissier">💵 Caissier(e)</option>
+            <option value="preteur">📋 Agent de Crédit</option>
+            <option value="directeur">👑 Directeur</option>
+          </select>
+        </div>
+        <div><label class="form-label">Téléphone</label><input type="text" name="telephone" class="form-control" placeholder="+242 06..."></div>
+        <div><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
+        <div><label class="form-label">Mot de passe *</label><input type="password" name="password" class="form-control" required value="pass123"></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <a href="/utilisateurs/" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">✅ Créer le compte</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

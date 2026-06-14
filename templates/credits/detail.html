@@ -1,0 +1,103 @@
+{% extends "base/base.html" %}
+{% block title %}Crédit #{{ credit.pk }}{% endblock %}
+{% block page_title %}Dossier crédit{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>📄 Crédit #{{ credit.pk }} — {{ credit.type_credit.nom }}</h1>
+    <div class="breadcrumb">{{ credit.client }} • {{ credit.date_demande|date:"d/m/Y" }}</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    {% if credit.statut in 'soumise,en_etude' and user.role in 'preteur,directeur,banque' %}
+    <a href="/credits/{{ credit.pk }}/instruire/" class="btn btn-primary">Instruire →</a>
+    {% elif credit.statut == 'approuvee' and user.role in 'preteur,directeur' %}
+    <a href="/credits/{{ credit.pk }}/decaisser/" class="btn btn-success">💰 Décaisser</a>
+    {% elif credit.statut == 'decaissee' %}
+    <a href="/credits/{{ credit.pk }}/amortissement/" class="btn btn-outline">📋 Tableau amortissement</a>
+    {% endif %}
+    <a href="/credits/" class="btn btn-outline">← Retour</a>
+  </div>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+  <div>
+    <!-- Infos crédit -->
+    <div class="card mb-2">
+      <div class="card-header"><h5>📋 Informations</h5></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:12px;font-size:13px;">
+          <div><div class="form-label">Client</div><strong>{{ credit.client.utilisateur.get_full_name }}</strong></div>
+          <div><div class="form-label">Type de crédit</div><strong>{{ credit.type_credit.nom }}</strong></div>
+          <div><div class="form-label">Montant demandé</div><strong>{{ credit.montant_demande|floatformat:0 }} FCFA</strong></div>
+          <div><div class="form-label">Montant accordé</div><strong style="color:var(--success);">{% if credit.montant_accorde %}{{ credit.montant_accorde|floatformat:0 }} FCFA{% else %}—{% endif %}</strong></div>
+          <div><div class="form-label">Durée</div><strong>{{ credit.duree_mois }} mois</strong></div>
+          <div><div class="form-label">Taux mensuel</div><strong>{{ credit.taux_interet_mensuel }}%</strong></div>
+          {% if credit.montant_accorde %}
+          <div><div class="form-label">Mensualité</div><strong style="color:var(--primary);">{{ credit.mensualite|floatformat:0 }} FCFA</strong></div>
+          <div><div class="form-label">Total intérêts</div><strong style="color:var(--warning);">{{ credit.total_interets|floatformat:0 }} FCFA</strong></div>
+          {% endif %}
+        </div>
+        <div class="divider"></div>
+        <div><div class="form-label">Objet du crédit</div><p style="font-size:13px;">{{ credit.objet_credit }}</p></div>
+        {% if credit.garantie %}<div class="mt-1"><div class="form-label">Garantie</div><p style="font-size:13px;">{{ credit.garantie }}</p></div>{% endif %}
+        {% if credit.motif_rejet %}<div class="mt-1"><div class="form-label" style="color:var(--danger);">Motif de rejet</div><p style="font-size:13px;color:var(--danger);">{{ credit.motif_rejet }}</p></div>{% endif %}
+      </div>
+    </div>
+    <!-- Workflow -->
+    <div class="card">
+      <div class="card-header"><h5>⏱️ Workflow</h5></div>
+      <div class="card-body">
+        {% for step, label, date_val, agent in steps %}
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 0;">
+          <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;{% if date_val %}background:var(--primary);color:white;{% else %}background:var(--border);color:var(--text-muted);{% endif %}">{{ step }}</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;">{{ label }}</div>
+            {% if date_val %}<div style="font-size:11px;color:var(--text-muted);">{{ date_val }} {% if agent %}— {{ agent }}{% endif %}</div>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 0;">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">→</div>
+          <div><span class="badge badge-{{ credit.statut }}" style="font-size:13px;padding:5px 14px;">{{ credit.get_statut_display }}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Échéances -->
+  <div class="card">
+    <div class="card-header">
+      <h5>📅 Tableau des échéances ({{ echeances|length }})</h5>
+      {% if credit.statut == 'decaissee' %}<a href="/credits/{{ credit.pk }}/amortissement/" class="btn btn-outline btn-sm">Complet</a>{% endif %}
+    </div>
+    {% if echeances %}
+    <div style="max-height:500px;overflow-y:auto;">
+      <table class="table-mf">
+        <thead><tr><th>N°</th><th>Date</th><th>Principal</th><th>Intérêt</th><th>Total</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+          {% for e in echeances %}
+          <tr {% if e.est_en_retard %}style="background:#fff5f5;"{% elif e.statut == 'payee' %}style="background:#f9fdf9;"{% endif %}>
+            <td style="font-weight:700;">{{ e.numero }}</td>
+            <td style="font-size:12px;{% if e.est_en_retard %}color:var(--danger);font-weight:600;{% endif %}">{{ e.date_echeance|date:"d/m/Y" }}</td>
+            <td style="font-size:12px;">{{ e.montant_principal|floatformat:0 }}</td>
+            <td style="font-size:12px;color:var(--warning);">{{ e.montant_interet|floatformat:0 }}</td>
+            <td style="font-weight:700;">{{ e.montant_total|floatformat:0 }}</td>
+            <td><span class="badge badge-{{ e.statut }}">{{ e.get_statut_display }}</span></td>
+            <td>
+              {% if e.statut != 'payee' and user.role in 'caissier,banque,directeur' %}
+              <a href="/credits/echeance/{{ e.pk }}/rembourser/" class="btn btn-success btn-sm" style="font-size:11px;padding:3px 8px;">Encaisser</a>
+              {% elif e.statut == 'payee' %}
+              <span style="color:var(--success);font-size:16px;">✅</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:24px;color:var(--text-muted);">Le tableau d'amortissement sera généré au décaissement.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

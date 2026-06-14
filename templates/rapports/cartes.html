@@ -1,0 +1,38 @@
+{% extends "base/base.html" %}
+{% block title %}Rapport Cartes 31{% endblock %}
+{% block page_title %}Rapport Cartes 31{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🃏 Rapport Cartes 31</h1></div>
+  <div style="display:flex;gap:8px;"><a href="/rapports/pdf/cartes/" class="btn btn-gold btn-sm">⬇ PDF</a><a href="/rapports/" class="btn btn-outline btn-sm">← Retour</a></div>
+</div>
+<div class="stat-card mb-3" style="max-width:360px;">
+  <div class="stat-icon bg-gold-soft">🏦</div>
+  <div><div class="stat-value" style="font-size:18px;color:var(--gold);">{{ total_retenu|floatformat:0 }}</div><div class="stat-label">FCFA retenus par la microfinance (cases 31)</div></div>
+</div>
+<div class="card">
+  <table class="table-mf">
+    <thead><tr><th>Numéro</th><th>Client</th><th>Cases</th><th>Total déposé</th><th>Client reçoit</th><th>MF retient</th><th>Statut</th></tr></thead>
+    <tbody>
+      {% for carte in cartes %}
+      <tr>
+        <td><a href="/cartes/{{ carte.pk }}/" style="font-family:monospace;font-weight:700;color:var(--gold);text-decoration:none;">{{ carte.numero }}</a></td>
+        <td><div style="font-weight:600;">{{ carte.client.utilisateur.get_full_name }}</div><div style="font-size:11px;color:var(--text-muted);">{{ carte.date_creation|date:"d/m/Y" }}</div></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-weight:700;">{{ carte.cases_remplies }}/31</span>
+            <div style="width:60px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:{{ carte.progression_pct }}%;background:var(--gold);"></div>
+            </div>
+          </div>
+        </td>
+        <td style="font-weight:600;">{{ carte.total_depose|floatformat:0 }} FCFA</td>
+        <td style="color:var(--success);font-weight:700;">{{ carte.montant_client|floatformat:0 }} FCFA</td>
+        <td style="color:var(--gold);font-weight:700;">{% if carte.montant_case_31 %}{{ carte.montant_case_31|floatformat:0 }}{% else %}—{% endif %} FCFA</td>
+        <td><span class="badge badge-{{ carte.statut }}">{{ carte.get_statut_display }}</span></td>
+      </tr>
+      {% empty %}<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted);">Aucune carte.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

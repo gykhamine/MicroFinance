@@ -1,0 +1,72 @@
+{% extends "base/base.html" %}
+{% block title %}Cartes 31{% endblock %}
+{% block page_title %}Cartes 31{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🃏 Cartes 31</h1><div class="breadcrumb">Produit spécial d'épargne progressive</div></div>
+  <div style="display:flex;gap:8px;">
+    <a href="/cartes/creer/" class="btn btn-gold">+ Nouvelle carte</a>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body" style="padding:12px 20px;">
+    <form method="get" style="display:flex;gap:10px;">
+      <select name="statut" class="form-select" style="width:180px;" onchange="this.form.submit()">
+        <option value="">Toutes</option>
+        <option value="active" {% if statut_filtre == 'active' %}selected{% endif %}>Actives</option>
+        <option value="complete" {% if statut_filtre == 'complete' %}selected{% endif %}>Complètes</option>
+        <option value="cloturee" {% if statut_filtre == 'cloturee' %}selected{% endif %}>Clôturées</option>
+        <option value="annulee" {% if statut_filtre == 'annulee' %}selected{% endif %}>Annulées</option>
+      </select>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <table class="table-mf">
+    <thead><tr><th>Numéro</th><th>Client</th><th>Progression</th><th>Total déposé</th><th>Compte</th><th>Statut</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for carte in cartes %}
+      <tr>
+        <td>
+          <a href="/cartes/{{ carte.pk }}/" style="font-family:monospace;font-weight:700;color:var(--gold);text-decoration:none;">{{ carte.numero }}</a>
+          <div style="font-size:11px;color:var(--text-muted);">{{ carte.date_creation|date:"d/m/Y" }}</div>
+        </td>
+        <td>
+          <div style="font-weight:600;">{{ carte.client.utilisateur.get_full_name }}</div>
+          <div style="font-size:11px;color:var(--text-muted);">{{ carte.client.numero_client }}</div>
+        </td>
+        <td style="min-width:140px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;">
+            <span>{{ carte.cases_remplies }}/31</span>
+            <span style="font-weight:600;color:var(--primary);">{{ carte.progression_pct }}%</span>
+          </div>
+          <div class="progress">
+            <div class="progress-bar" style="width:{{ carte.progression_pct }}%;{% if carte.progression_pct == 100 %}background:var(--gold);{% endif %}"></div>
+          </div>
+        </td>
+        <td style="font-weight:700;">{{ carte.total_depose|floatformat:0 }} FCFA</td>
+        <td style="font-family:monospace;font-size:11px;color:var(--text-muted);">{{ carte.compte.numero }}</td>
+        <td><span class="badge badge-{{ carte.statut }}">{{ carte.get_statut_display }}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="/cartes/{{ carte.pk }}/" class="btn btn-outline btn-sm">Voir</a>
+            {% if carte.statut == 'active' %}
+            <a href="/cartes/{{ carte.pk }}/deposer/" class="btn btn-primary btn-sm">+ Case</a>
+            {% elif carte.statut == 'complete' %}
+            <a href="/cartes/{{ carte.pk }}/cloturer/" class="btn btn-gold btn-sm">🏁 Clôturer</a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">
+        <div style="font-size:36px;margin-bottom:10px;">🃏</div>
+        Aucune carte 31. <a href="/cartes/creer/">Créer la première →</a>
+      </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

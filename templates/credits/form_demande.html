@@ -1,0 +1,109 @@
+{% extends "base/base.html" %}
+{% block title %}Demande de crédit{% endblock %}
+{% block page_title %}Nouvelle demande de crédit{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📄 Nouvelle demande de crédit</h1></div><a href="/credits/" class="btn btn-outline">← Retour</a></div>
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2" style="align-items:start;">
+    <div class="card mb-2">
+      <div class="card-header"><h5>Client & Compte</h5></div>
+      <div class="card-body">
+        <div class="mb-2">
+          <label class="form-label">Client *</label>
+          <select name="client" class="form-select" id="sel-client" required onchange="updateComptesCredit(this)">
+            <option value="">— Sélectionner —</option>
+            {% for c in clients %}
+            <option value="{{ c.pk }}" data-comptes='[{% for cp in c.comptes.all %}{"pk":{{ cp.pk }},"label":"{{ cp.type_compte.nom }} — {{ cp.numero }}","solde":"{{ cp.solde|floatformat:0 }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+              {{ c.utilisateur.get_full_name }} ({{ c.numero_client }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Compte de décaissement *</label>
+          <select name="compte" class="form-select" id="sel-compte-cr" required>
+            <option value="">— Choisir le client d'abord —</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-2">
+      <div class="card-header"><h5>Paramètres du crédit</h5></div>
+      <div class="card-body">
+        <div class="mb-2">
+          <label class="form-label">Type de crédit *</label>
+          <select name="type_credit" class="form-select" required onchange="updateTypeInfo(this)">
+            <option value="">— Sélectionner —</option>
+            {% for t in types %}
+            <option value="{{ t.pk }}" data-taux="{{ t.taux_interet_mensuel }}" data-max="{{ t.duree_max_mois }}" data-montmax="{{ t.montant_max|floatformat:0 }}">
+              {{ t.nom }} — {{ t.taux_interet_mensuel }}%/mois — Max {{ t.montant_max|floatformat:0 }} FCFA
+            </option>
+            {% endfor %}
+          </select>
+          <div id="type-info" style="display:none;margin-top:6px;background:var(--primary-light);padding:8px;border-radius:6px;font-size:12px;"></div>
+        </div>
+        <div class="grid-2" style="gap:12px;">
+          <div><label class="form-label">Montant demandé (FCFA) *</label><input type="number" name="montant_demande" id="montant-cr" class="form-control" required min="1" oninput="calcMensualite()"></div>
+          <div><label class="form-label">Durée (mois) *</label><input type="number" name="duree_mois" id="duree-cr" class="form-control" required min="1" max="60" oninput="calcMensualite()"></div>
+        </div>
+        <div id="calc-result" style="display:none;margin-top:12px;background:#e8f5e9;border-radius:8px;padding:12px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;"><span>Mensualité estimée</span><strong id="calc-mens">—</strong></div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;color:var(--text-muted);"><span>Total remboursement</span><span id="calc-total">—</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;color:var(--warning);"><span>Total intérêts</span><span id="calc-interets">—</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h5>Justification</h5></div>
+      <div class="card-body">
+        <div class="mb-2"><label class="form-label">Objet du crédit *</label><textarea name="objet_credit" class="form-control" rows="3" required placeholder="But de l'emprunt : commerce, équipement, santé..."></textarea></div>
+        <div class="mb-2"><label class="form-label">Garantie proposée</label><textarea name="garantie" class="form-control" rows="2" placeholder="Bien immobilier, véhicule, caution..."></textarea></div>
+        <div><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+    <a href="/credits/" class="btn btn-outline">Annuler</a>
+    <button type="submit" class="btn btn-primary btn-lg">📄 Soumettre la demande</button>
+  </div>
+</form>
+<script>
+let currentTaux = 0;
+function updateComptesCredit(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const comptes = JSON.parse(opt.dataset.comptes || '[]');
+  const dest = document.getElementById('sel-compte-cr');
+  dest.innerHTML = '<option value="">— Sélectionner —</option>';
+  comptes.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.pk; o.textContent = c.label + ' — ' + c.solde + ' FCFA';
+    dest.appendChild(o);
+  });
+}
+function updateTypeInfo(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  currentTaux = parseFloat(opt.dataset.taux) || 0;
+  const info = document.getElementById('type-info');
+  if (opt.dataset.taux) {
+    info.style.display='block';
+    info.innerHTML = `Taux : <strong>${opt.dataset.taux}%/mois</strong> | Durée max : <strong>${opt.dataset.max} mois</strong> | Montant max : <strong>${opt.dataset.montmax} FCFA</strong>`;
+    document.getElementById('duree-cr').max = opt.dataset.max;
+  }
+  calcMensualite();
+}
+function calcMensualite() {
+  const M = parseFloat(document.getElementById('montant-cr').value) || 0;
+  const n = parseInt(document.getElementById('duree-cr').value) || 0;
+  const r = currentTaux / 100;
+  if (M > 0 && n > 0 && r > 0) {
+    const mens = M * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1);
+    const total = mens * n;
+    document.getElementById('calc-result').style.display='block';
+    document.getElementById('calc-mens').textContent = Math.round(mens).toLocaleString('fr') + ' FCFA';
+    document.getElementById('calc-total').textContent = Math.round(total).toLocaleString('fr') + ' FCFA';
+    document.getElementById('calc-interets').textContent = Math.round(total - M).toLocaleString('fr') + ' FCFA';
+  }
+}
+</script>
+{% endblock %}

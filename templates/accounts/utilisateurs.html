@@ -1,0 +1,30 @@
+{% extends "base/base.html" %}
+{% block title %}Utilisateurs{% endblock %}
+{% block page_title %}Gestion des utilisateurs{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🔑 Utilisateurs</h1><div class="breadcrumb">{{ utilisateurs|length }} compte(s)</div></div>
+  <a href="/utilisateurs/creer/" class="btn btn-primary">+ Nouveau</a>
+</div>
+<div class="card">
+  <table class="table-mf">
+    <thead><tr><th>Utilisateur</th><th>Login</th><th>Rôle</th><th>Téléphone</th><th>Statut</th><th>Créé le</th></tr></thead>
+    <tbody>
+      {% for u in utilisateurs %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="avatar" style="font-size:18px;">{{ u.get_role_icon }}</div>
+            <div><div style="font-weight:600;">{{ u.get_full_name }}</div><div style="font-size:11px;color:var(--text-muted);">{{ u.email }}</div></div>
+          </div>
+        </td>
+        <td><code style="background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:4px;font-size:12px;">{{ u.username }}</code></td>
+        <td><span class="badge badge-active">{{ u.get_role_display }}</span></td>
+        <td>{{ u.telephone|default:"—" }}</td>
+        <td>{% if u.actif %}<span class="badge badge-active">✅ Actif</span>{% else %}<span class="badge badge-rejetee">❌ Inactif</span>{% endif %}</td>
+        <td style="font-size:12px;color:var(--text-muted);">{{ u.created_at|date:"d/m/Y" }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Aucun utilisateur.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

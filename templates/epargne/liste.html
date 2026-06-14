@@ -1,0 +1,36 @@
+{% extends "base/base.html" %}
+{% block title %}Épargne{% endblock %}
+{% block page_title %}Plans d'épargne{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🪙 Plans d'épargne</h1></div><a href="/epargne/creer/" class="btn btn-primary">+ Nouveau plan</a></div>
+<div class="card">
+  <table class="table-mf">
+    <thead><tr><th>Client</th><th>Nom du plan</th><th>Objectif</th><th>Progression</th><th>Fréquence</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for p in plans %}
+      <tr>
+        <td><div style="font-weight:600;">{{ p.client.utilisateur.get_full_name }}</div></td>
+        <td><div style="font-weight:600;">{{ p.nom }}</div><div style="font-size:11px;color:var(--text-muted);">Début {{ p.date_debut|date:"d/m/Y" }}</div></td>
+        <td style="font-weight:700;">{{ p.objectif|floatformat:0 }} FCFA</td>
+        <td style="min-width:140px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+            <span>{{ p.total_verse|floatformat:0 }} FCFA</span>
+            <span style="font-weight:700;color:var(--primary);">{{ p.progression_pct }}%</span>
+          </div>
+          <div class="progress">
+            <div class="progress-bar" style="width:{{ p.progression_pct }}%;{% if p.progression_pct >= 100 %}background:var(--success);{% endif %}"></div>
+          </div>
+        </td>
+        <td><span class="badge badge-active">{{ p.get_frequence_display }}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="/epargne/{{ p.pk }}/" class="btn btn-outline btn-sm">Voir</a>
+            <a href="/epargne/{{ p.pk }}/verser/" class="btn btn-primary btn-sm">+ Verser</a>
+          </div>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Aucun plan d'épargne.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

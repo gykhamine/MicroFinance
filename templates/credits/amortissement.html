@@ -1,0 +1,67 @@
+{% extends "base/base.html" %}
+{% block title %}Tableau d'amortissement{% endblock %}
+{% block page_title %}Tableau d'amortissement{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>📊 Tableau d'amortissement — Crédit #{{ credit.pk }}</h1>
+    <div class="breadcrumb">{{ credit.client }} • {{ credit.montant_accorde|floatformat:0 }} FCFA • {{ credit.duree_mois }} mois</div>
+  </div>
+  <a href="/credits/{{ credit.pk }}/" class="btn btn-outline">← Dossier</a>
+</div>
+
+<div class="grid-stats mb-3">
+  <div class="stat-card"><div class="stat-icon bg-primary-soft">💰</div><div><div class="stat-value" style="font-size:18px;">{{ credit.montant_accorde|floatformat:0 }}</div><div class="stat-label">FCFA accordés</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-success-soft">✅</div><div><div class="stat-value" style="font-size:18px;color:var(--success);">{{ total_paye|floatformat:0 }}</div><div class="stat-label">FCFA remboursés</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-danger-soft">⏳</div><div><div class="stat-value" style="font-size:18px;color:var(--danger);">{{ total_restant|floatformat:0 }}</div><div class="stat-label">FCFA restants</div></div></div>
+  <div class="stat-card"><div class="stat-icon bg-warning-soft">📅</div><div><div class="stat-value">{{ credit.mensualite|floatformat:0 }}</div><div class="stat-label">FCFA/mois</div></div></div>
+</div>
+
+<div class="card">
+  <table class="table-mf">
+    <thead>
+      <tr>
+        <th>N°</th><th>Date d'échéance</th><th>Principal</th><th>Intérêt</th>
+        <th>Total</th><th>Payé</th><th>Reste</th><th>Pénalité</th><th>Statut</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in echeances %}
+      <tr {% if e.est_en_retard %}style="background:#fff5f5;"{% elif e.statut == 'payee' %}style="background:#f9fdf9;opacity:.75;"{% endif %}>
+        <td style="font-weight:700;color:var(--primary);">{{ e.numero }}</td>
+        <td style="{% if e.est_en_retard %}color:var(--danger);font-weight:600;{% endif %}font-size:12px;">
+          {{ e.date_echeance|date:"d/m/Y" }}
+          {% if e.est_en_retard %}<span style="display:block;font-size:10px;">⚠️ En retard</span>{% endif %}
+        </td>
+        <td>{{ e.montant_principal|floatformat:0 }}</td>
+        <td style="color:var(--warning);">{{ e.montant_interet|floatformat:0 }}</td>
+        <td style="font-weight:700;">{{ e.montant_total|floatformat:0 }}</td>
+        <td style="color:var(--success);">{% if e.montant_paye > 0 %}{{ e.montant_paye|floatformat:0 }}{% else %}—{% endif %}</td>
+        <td style="font-weight:700;{% if e.reste_a_payer > 0 %}color:var(--danger);{% else %}color:var(--success);{% endif %}">
+          {% if e.statut == 'payee' %}0{% else %}{{ e.reste_a_payer|floatformat:0 }}{% endif %}
+        </td>
+        <td style="color:var(--danger);font-size:12px;">{% if e.penalite > 0 %}{{ e.penalite|floatformat:0 }}{% else %}—{% endif %}</td>
+        <td><span class="badge badge-{{ e.statut }}">{{ e.get_statut_display }}</span></td>
+        <td>
+          {% if e.statut != 'payee' and user.role in 'caissier,banque,directeur' %}
+          <a href="/credits/echeance/{{ e.pk }}/rembourser/" class="btn btn-success btn-sm" style="font-size:11px;padding:3px 8px;">💳</a>
+          {% elif e.statut == 'payee' %}
+          <span style="color:var(--success);font-size:16px;">✅</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr style="background:#f7fafc;font-weight:700;">
+        <td colspan="2" style="text-align:right;">TOTAUX</td>
+        <td>{{ credit.montant_accorde|floatformat:0 }}</td>
+        <td style="color:var(--warning);">{{ credit.total_interets|floatformat:0 }}</td>
+        <td>{{ credit.total_remboursement|floatformat:0 }}</td>
+        <td style="color:var(--success);">{{ total_paye|floatformat:0 }}</td>
+        <td style="color:var(--danger);">{{ total_restant|floatformat:0 }}</td>
+        <td colspan="3"></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+{% endblock %}

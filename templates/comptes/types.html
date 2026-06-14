@@ -1,0 +1,42 @@
+{% extends "base/base.html" %}
+{% block title %}Types de comptes{% endblock %}
+{% block page_title %}Types de comptes{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🏷️ Types de comptes</h1></div></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card">
+    <div class="card-header"><h5>Comptes disponibles</h5></div>
+    <table class="table-mf">
+      <thead><tr><th>Code</th><th>Nom</th><th>Solde min</th><th>Frais ouverture</th><th>Taux intérêt</th></tr></thead>
+      <tbody>
+        {% for t in types %}
+        <tr>
+          <td><span style="font-family:monospace;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;">{{ t.code }}</span></td>
+          <td><div style="font-weight:600;">{{ t.nom }}</div><div style="font-size:11px;color:var(--text-muted);">{{ t.description|truncatechars:50 }}</div></td>
+          <td>{{ t.solde_minimum|floatformat:0 }} FCFA</td>
+          <td>{{ t.frais_ouverture|floatformat:0 }} FCFA</td>
+          <td>{{ t.taux_interet_annuel }}% /an</td>
+        </tr>
+        {% empty %}<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">Aucun type.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>Créer un type de compte</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="grid-2" style="gap:12px;margin-bottom:14px;">
+          <div><label class="form-label">Nom *</label><input type="text" name="nom" class="form-control" required placeholder="Compte courant"></div>
+          <div><label class="form-label">Code *</label><input type="text" name="code" class="form-control" required placeholder="CCO" style="text-transform:uppercase;"></div>
+          <div><label class="form-label">Solde minimum (FCFA)</label><input type="number" name="solde_minimum" class="form-control" value="0" step="0.01"></div>
+          <div><label class="form-label">Frais ouverture (FCFA)</label><input type="number" name="frais_ouverture" class="form-control" value="0" step="0.01"></div>
+          <div><label class="form-label">Taux intérêt annuel (%)</label><input type="number" name="taux_interet_annuel" class="form-control" value="0" step="0.01"></div>
+        </div>
+        <div class="mb-3"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+        <button type="submit" class="btn btn-primary w-100">+ Créer</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

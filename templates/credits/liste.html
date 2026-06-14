@@ -1,0 +1,61 @@
+{% extends "base/base.html" %}
+{% block title %}Crédits{% endblock %}
+{% block page_title %}Crédits{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>📄 Crédits</h1></div>
+  <div style="display:flex;gap:8px;">
+    <a href="/credits/demande/" class="btn btn-primary">+ Demande</a>
+    {% if user.role == 'directeur' %}<a href="/credits/types/" class="btn btn-outline">⚙️ Types</a>{% endif %}
+    <a href="/rapports/pdf/credits/" class="btn btn-outline btn-sm">⬇ PDF</a>
+  </div>
+</div>
+<div class="card mb-3">
+  <div class="card-body" style="padding:12px 20px;">
+    <form method="get" style="display:flex;gap:10px;">
+      <select name="statut" class="form-select" style="width:180px;" onchange="this.form.submit()">
+        <option value="">Tous</option>
+        <option value="soumise" {% if statut_filtre == 'soumise' %}selected{% endif %}>Soumise</option>
+        <option value="en_etude" {% if statut_filtre == 'en_etude' %}selected{% endif %}>En étude</option>
+        <option value="approuvee" {% if statut_filtre == 'approuvee' %}selected{% endif %}>Approuvée</option>
+        <option value="rejetee" {% if statut_filtre == 'rejetee' %}selected{% endif %}>Rejetée</option>
+        <option value="decaissee" {% if statut_filtre == 'decaissee' %}selected{% endif %}>Décaissée</option>
+        <option value="cloturee" {% if statut_filtre == 'cloturee' %}selected{% endif %}>Clôturée</option>
+      </select>
+    </form>
+  </div>
+</div>
+<div class="card">
+  <table class="table-mf">
+    <thead><tr><th>#</th><th>Client</th><th>Type</th><th>Demandé</th><th>Accordé</th><th>Durée</th><th>Statut</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for cr in credits %}
+      <tr>
+        <td style="font-weight:700;color:var(--primary);">#{{ cr.pk }}</td>
+        <td>
+          <div style="font-weight:600;">{{ cr.client.utilisateur.get_full_name }}</div>
+          <div style="font-size:11px;color:var(--text-muted);">{{ cr.date_demande|date:"d/m/Y" }}</div>
+        </td>
+        <td style="font-size:12px;">{{ cr.type_credit.nom }}</td>
+        <td style="font-weight:600;">{{ cr.montant_demande|floatformat:0 }} FCFA</td>
+        <td style="font-weight:700;color:var(--success);">{% if cr.montant_accorde %}{{ cr.montant_accorde|floatformat:0 }} FCFA{% else %}—{% endif %}</td>
+        <td style="font-size:12px;">{{ cr.duree_mois }} mois</td>
+        <td><span class="badge badge-{{ cr.statut }}">{{ cr.get_statut_display }}</span></td>
+        <td>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <a href="/credits/{{ cr.pk }}/" class="btn btn-outline btn-sm">Voir</a>
+            {% if cr.statut in 'soumise,en_etude' and user.role in 'preteur,directeur,banque' %}
+            <a href="/credits/{{ cr.pk }}/instruire/" class="btn btn-primary btn-sm">Instruire</a>
+            {% elif cr.statut == 'approuvee' and user.role in 'preteur,directeur' %}
+            <a href="/credits/{{ cr.pk }}/decaisser/" class="btn btn-success btn-sm">Décaisser</a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">Aucun crédit.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

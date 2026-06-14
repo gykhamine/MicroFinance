@@ -1,0 +1,60 @@
+{% extends "base/base.html" %}
+{% block title %}Instruction crédit{% endblock %}
+{% block page_title %}Instruction du crédit{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📋 Instruction — Crédit #{{ credit.pk }}</h1><div class="breadcrumb">{{ credit.client }} • {{ credit.montant_demande|floatformat:0 }} FCFA • {{ credit.duree_mois }} mois</div></div><a href="/credits/{{ credit.pk }}/" class="btn btn-outline">← Retour</a></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card">
+    <div class="card-header"><h5>Dossier de demande</h5></div>
+    <div class="card-body" style="font-size:13px;">
+      <div class="grid-2" style="gap:10px;margin-bottom:12px;">
+        <div><div class="form-label">Client</div><strong>{{ credit.client.utilisateur.get_full_name }}</strong></div>
+        <div><div class="form-label">N° Client</div><strong>{{ credit.client.numero_client }}</strong></div>
+        <div><div class="form-label">Type crédit</div><strong>{{ credit.type_credit.nom }}</strong></div>
+        <div><div class="form-label">Taux mensuel</div><strong>{{ credit.taux_interet_mensuel }}%</strong></div>
+        <div><div class="form-label">Montant demandé</div><strong style="font-size:17px;color:var(--primary);">{{ credit.montant_demande|floatformat:0 }} FCFA</strong></div>
+        <div><div class="form-label">Durée</div><strong>{{ credit.duree_mois }} mois</strong></div>
+        {% if credit.client.revenu_mensuel > 0 %}<div><div class="form-label">Revenu mensuel</div><strong>{{ credit.client.revenu_mensuel|floatformat:0 }} FCFA</strong></div>{% endif %}
+      </div>
+      <div class="divider"></div>
+      <div class="form-label">Objet du crédit</div><p>{{ credit.objet_credit }}</p>
+      {% if credit.garantie %}<div class="form-label mt-1">Garantie proposée</div><p>{{ credit.garantie }}</p>{% endif %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>Décision</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Décision *</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <label style="display:flex;align-items:center;gap:8px;padding:14px;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;" id="lbl-approuver">
+              <input type="radio" name="decision" value="approuver" onchange="toggleDecision('approuver')" style="width:18px;height:18px;"> <span style="font-weight:600;color:var(--success);">✅ Approuver</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:14px;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;" id="lbl-rejeter">
+              <input type="radio" name="decision" value="rejeter" onchange="toggleDecision('rejeter')" style="width:18px;height:18px;"> <span style="font-weight:600;color:var(--danger);">❌ Rejeter</span>
+            </label>
+          </div>
+        </div>
+        <div id="panel-approbation" style="display:none;">
+          <div class="mb-2"><label class="form-label">Montant accordé (FCFA)</label><input type="number" name="montant_accorde" class="form-control" value="{{ credit.montant_demande }}" min="1" step="0.01"></div>
+        </div>
+        <div id="panel-rejet" style="display:none;">
+          <div class="mb-2"><label class="form-label">Motif de rejet *</label><textarea name="motif_rejet" class="form-control" rows="3" placeholder="Raison du refus..."></textarea></div>
+        </div>
+        <div class="mb-3"><label class="form-label">Notes internes</label><textarea name="notes" class="form-control" rows="2">{{ credit.notes }}</textarea></div>
+        <button type="submit" class="btn btn-primary btn-lg w-100">Enregistrer la décision</button>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function toggleDecision(v) {
+  document.getElementById('panel-approbation').style.display = v==='approuver'?'block':'none';
+  document.getElementById('panel-rejet').style.display = v==='rejeter'?'block':'none';
+  document.getElementById('lbl-approuver').style.borderColor = v==='approuver'?'var(--success)':'var(--border)';
+  document.getElementById('lbl-rejeter').style.borderColor = v==='rejeter'?'var(--danger)':'var(--border)';
+}
+</script>
+{% endblock %}

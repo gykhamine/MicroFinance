@@ -1,0 +1,49 @@
+{% extends "base/base.html" %}
+{% block title %}Clients{% endblock %}
+{% block page_title %}Clients{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>👥 Clients</h1><div class="breadcrumb">{{ clients|length }} client(s) actif(s)</div></div>
+  <a href="/clients/nouveau/" class="btn btn-primary">+ Nouveau client</a>
+</div>
+<div class="card">
+  <div class="card-header">
+    <form method="get" style="display:flex;gap:10px;width:100%;">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Nom, prénom, N° client, téléphone..." style="flex:1;">
+      <button type="submit" class="btn btn-primary">Rechercher</button>
+      {% if q %}<a href="/clients/" class="btn btn-outline">✕</a>{% endif %}
+    </form>
+  </div>
+  <table class="table-mf">
+    <thead><tr><th>Client</th><th>N° Client</th><th>Téléphone</th><th>Comptes</th><th>Solde total</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for c in clients %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="avatar">{{ c.utilisateur.first_name.0 }}{{ c.utilisateur.last_name.0 }}</div>
+            <div>
+              <div style="font-weight:600;">{{ c.utilisateur.get_full_name }}</div>
+              <div style="font-size:11px;color:var(--text-muted);">{{ c.profession|default:"—" }}</div>
+            </div>
+          </div>
+        </td>
+        <td><span style="font-family:monospace;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;">{{ c.numero_client }}</span></td>
+        <td>{{ c.utilisateur.telephone|default:"—" }}</td>
+        <td>{{ c.comptes.count }}</td>
+        <td style="font-weight:700;">{{ c.solde_total|floatformat:0 }} FCFA</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="/clients/{{ c.pk }}/" class="btn btn-outline btn-sm">Dossier</a>
+            <a href="/transactions/depot/?client={{ c.pk }}" class="btn btn-success btn-sm">💰</a>
+            <a href="/transactions/retrait/?client={{ c.pk }}" class="btn btn-danger btn-sm">💸</a>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Aucun client trouvé.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

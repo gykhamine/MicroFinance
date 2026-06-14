@@ -1,0 +1,67 @@
+{% extends "base/base.html" %}
+{% block title %}Taxes & Frais{% endblock %}
+{% block page_title %}Configuration des taxes et frais{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>⚙️ Taxes & Frais</h1><div class="breadcrumb">Paramètres configurables</div></div></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card">
+    <div class="card-header"><h5>Taxes configurées</h5></div>
+    <div class="card-body" style="padding:0;">
+      {% for taxe in taxes %}
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div>
+            <div style="font-weight:600;">{{ taxe.nom }}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">{{ taxe.get_type_operation_display }}</div>
+          </div>
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle">
+            <input type="hidden" name="pk" value="{{ taxe.pk }}">
+            <button type="submit" class="btn btn-sm {% if taxe.actif %}btn-success{% else %}btn-outline{% endif %}">
+              {% if taxe.actif %}✅ Active{% else %}⭕ Inactive{% endif %}
+            </button>
+          </form>
+        </div>
+        <form method="post" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:flex-end;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update">
+          <input type="hidden" name="pk" value="{{ taxe.pk }}">
+          <div><label style="font-size:11px;color:var(--text-muted);">Taux %</label><input type="number" name="taux_pourcent" value="{{ taxe.taux_pourcent }}" class="form-control" step="0.001" style="font-size:13px;padding:6px 10px;"></div>
+          <div><label style="font-size:11px;color:var(--text-muted);">Fixe FCFA</label><input type="number" name="montant_fixe" value="{{ taxe.montant_fixe }}" class="form-control" step="0.01" style="font-size:13px;padding:6px 10px;"></div>
+          <div><label style="font-size:11px;color:var(--text-muted);">Minimum</label><input type="number" name="montant_minimum" value="{{ taxe.montant_minimum }}" class="form-control" step="0.01" style="font-size:13px;padding:6px 10px;"></div>
+          <button type="submit" class="btn btn-primary btn-sm" style="margin-top:auto;">💾</button>
+        </form>
+      </div>
+      {% empty %}<div style="padding:24px;text-align:center;color:var(--text-muted);">Aucune taxe configurée.</div>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>Créer une nouvelle taxe</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="creer">
+        <div class="mb-2"><label class="form-label">Nom *</label><input type="text" name="nom" class="form-control" required placeholder="Frais de retrait"></div>
+        <div class="mb-2">
+          <label class="form-label">Type d'opération *</label>
+          <select name="type_operation" class="form-select" required>
+            <option value="depot">Dépôt</option>
+            <option value="retrait">Retrait</option>
+            <option value="transfert">Transfert</option>
+            <option value="credit">Remboursement crédit</option>
+            <option value="carte_31">Carte 31</option>
+          </select>
+        </div>
+        <div class="grid-3" style="gap:10px;margin-bottom:16px;">
+          <div><label class="form-label">Taux (%)</label><input type="number" name="taux_pourcent" class="form-control" value="0" step="0.001"></div>
+          <div><label class="form-label">Fixe (FCFA)</label><input type="number" name="montant_fixe" class="form-control" value="0" step="0.01"></div>
+          <div><label class="form-label">Minimum</label><input type="number" name="montant_minimum" class="form-control" value="0" step="0.01"></div>
+        </div>
+        <div class="alert alert-info" style="font-size:12px;">Le calcul : <code>max(montant × taux% + fixe, minimum)</code></div>
+        <button type="submit" class="btn btn-primary w-100">+ Créer la taxe</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

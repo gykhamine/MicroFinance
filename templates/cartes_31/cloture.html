@@ -1,0 +1,84 @@
+{% extends "base/base.html" %}
+{% block title %}Clôturer la carte{% endblock %}
+{% block page_title %}Clôturer la carte 31{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🏁 Clôture — {{ carte.numero }}</h1><div class="breadcrumb">{{ carte.client }} • 31/31 cases remplies</div></div>
+  <a href="/cartes/{{ carte.pk }}/" class="btn btn-outline">← Retour</a>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+  <!-- Récapitulatif -->
+  <div>
+    <div class="card mb-2" style="border-top:4px solid var(--gold);">
+      <div class="card-header"><h5>💰 Récapitulatif de clôture</h5></div>
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span class="text-muted">Total déposé (31 cases)</span>
+          <strong>{{ carte.total_depose|floatformat:0 }} FCFA</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);color:var(--success);">
+          <span>✅ Client reçoit (30 cases)</span>
+          <strong style="font-size:18px;">{{ montant_client_preview|floatformat:0 }} FCFA</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;color:var(--gold);">
+          <span>🏦 Microfinance retient (case 31 — la plus élevée)</span>
+          <strong style="font-size:18px;">{% if case_mf %}{{ case_mf.montant|floatformat:0 }}{% else %}—{% endif %} FCFA</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- La case MF -->
+    {% if case_mf %}
+    <div class="card mb-2" style="border-left:4px solid var(--gold);background:var(--gold-light);">
+      <div class="card-body">
+        <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:6px;">🏦 Case retenue par la microfinance</div>
+        <div style="font-size:28px;font-weight:700;color:var(--gold);">{{ case_mf.montant|floatformat:0 }} FCFA</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">C'est le montant le plus élevé parmi les 31 cases déposées.</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Tableau des cases triées -->
+    <div class="card">
+      <div class="card-header"><h5>📋 Toutes les cases (triées par montant)</h5></div>
+      <div style="max-height:300px;overflow-y:auto;">
+        <table class="table-mf">
+          <thead><tr><th>Case N°</th><th>Montant</th><th>Date</th><th></th></tr></thead>
+          <tbody>
+            {% for case in cases %}
+            <tr {% if forloop.last %}style="background:var(--gold-light);"{% endif %}>
+              <td><span style="background:{% if forloop.last %}var(--gold){% else %}var(--primary){% endif %};color:white;padding:2px 10px;border-radius:10px;font-weight:700;">{{ case.numero_case }}</span></td>
+              <td style="font-weight:700;{% if forloop.last %}color:var(--gold);{% endif %}">{{ case.montant|floatformat:0 }} FCFA</td>
+              <td style="font-size:11px;color:var(--text-muted);">{{ case.date_depot|date:"d/m/Y" }}</td>
+              <td>{% if forloop.last %}<span style="font-size:11px;color:var(--gold);font-weight:600;">🏦 MF</span>{% else %}<span style="font-size:11px;color:var(--success);">✅ Client</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation -->
+  <div class="card" style="border-top:4px solid var(--danger);">
+    <div class="card-header"><h5>⚠️ Confirmer la clôture</h5></div>
+    <div class="card-body">
+      <div class="alert alert-warning">
+        <strong>Action irréversible.</strong> Une fois confirmée, la carte sera clôturée et les fonds versés. Vérifiez bien le récapitulatif avant de confirmer.
+      </div>
+      <div style="background:#f7fafc;border-radius:10px;padding:16px;margin-bottom:20px;font-size:13px;">
+        <div style="margin-bottom:8px;"><strong>Client :</strong> {{ carte.client.utilisateur.get_full_name }}</div>
+        <div style="margin-bottom:8px;"><strong>Compte crédité :</strong> {{ carte.compte.numero }}</div>
+        <div style="margin-bottom:8px;color:var(--success);"><strong>Montant versé au client :</strong> <span style="font-size:17px;font-weight:700;">{{ montant_client_preview|floatformat:0 }} FCFA</span></div>
+        <div style="color:var(--gold);"><strong>Case retenue par MF :</strong> <span style="font-size:17px;font-weight:700;">{% if case_mf %}{{ case_mf.montant|floatformat:0 }}{% endif %} FCFA</span></div>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-gold btn-lg w-100">🏁 Confirmer la clôture</button>
+      </form>
+      <a href="/cartes/{{ carte.pk }}/" class="btn btn-outline w-100 mt-1">Annuler</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

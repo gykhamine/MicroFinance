@@ -1,0 +1,60 @@
+{% extends "base/base.html" %}
+{% block title %}Nouveau plan d'épargne{% endblock %}
+{% block page_title %}Nouveau plan d'épargne{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🪙 Nouveau plan d'épargne</h1></div><a href="/epargne/" class="btn btn-outline">← Retour</a></div>
+<div class="card" style="max-width:680px;">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="grid-2" style="gap:14px;">
+        <div>
+          <label class="form-label">Client *</label>
+          <select name="client" class="form-select" id="sel-client-ep" required onchange="updateComptesEp(this)">
+            <option value="">— Sélectionner —</option>
+            {% for c in clients %}
+            <option value="{{ c.pk }}" data-comptes='[{% for cp in c.comptes.all %}{"pk":{{ cp.pk }},"label":"{{ cp.type_compte.nom }} — {{ cp.numero }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+              {{ c.utilisateur.get_full_name }} ({{ c.numero_client }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Compte *</label>
+          <select name="compte" class="form-select" id="sel-compte-ep" required>
+            <option value="">— Choisir le client —</option>
+          </select>
+        </div>
+        <div class="grid-2" style="grid-column:span 2;gap:14px;">
+          <div><label class="form-label">Nom du plan *</label><input type="text" name="nom" class="form-control" required placeholder="Épargne retraite, scolarité..."></div>
+          <div><label class="form-label">Objectif (FCFA) *</label><input type="number" name="objectif" class="form-control" required min="1"></div>
+          <div><label class="form-label">Montant par versement *</label><input type="number" name="montant_verse" class="form-control" required min="1"></div>
+          <div>
+            <label class="form-label">Fréquence</label>
+            <select name="frequence" class="form-select">
+              <option value="quotidien">Quotidien</option>
+              <option value="hebdomadaire">Hebdomadaire</option>
+              <option value="mensuel" selected>Mensuel</option>
+            </select>
+          </div>
+          <div><label class="form-label">Date de début *</label><input type="date" name="date_debut" class="form-control" required></div>
+          <div><label class="form-label">Date de fin prévue</label><input type="date" name="date_fin_prevue" class="form-control"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <a href="/epargne/" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">✅ Créer le plan</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function updateComptesEp(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const comptes = JSON.parse(opt.dataset.comptes || '[]');
+  const dest = document.getElementById('sel-compte-ep');
+  dest.innerHTML = '<option value="">— Sélectionner —</option>';
+  comptes.forEach(c => { const o=document.createElement('option'); o.value=c.pk; o.textContent=c.label; dest.appendChild(o); });
+}
+</script>
+{% endblock %}

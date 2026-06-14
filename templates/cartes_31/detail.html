@@ -1,0 +1,153 @@
+{% extends "base/base.html" %}
+{% block title %}Carte {{ carte.numero }}{% endblock %}
+{% block page_title %}Carte 31{% endblock %}
+{% block extra_css %}
+<style>
+.case-btn { aspect-ratio:1; border-radius:8px; border:2px solid var(--border); background:white; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:13px; cursor:default; font-weight:700; transition:all .15s; position:relative; min-height:60px; }
+.case-btn.remplie { background:var(--primary); border-color:var(--primary); color:white; }
+.case-btn.mf { background:linear-gradient(135deg,var(--gold),#b8932e); border-color:var(--gold); color:white; }
+.case-btn.libre { border-style:dashed; border-color:var(--primary); color:var(--primary); cursor:pointer; }
+.case-btn.libre:hover { background:var(--primary-light); }
+.case-montant { font-size:9px; font-weight:400; margin-top:1px; opacity:.85; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 style="display:flex;align-items:center;gap:12px;">
+      <span style="background:var(--gold);color:white;padding:6px 14px;border-radius:8px;font-family:monospace;font-size:16px;">{{ carte.numero }}</span>
+      Carte 31
+    </h1>
+    <div class="breadcrumb" style="display:flex;gap:16px;margin-top:4px;">
+      <span>👤 {{ carte.client }}</span>
+      <span>🏦 {{ carte.compte.type_compte.nom }} {{ carte.compte.numero }}</span>
+      <span>📅 {{ carte.date_creation|date:"d/m/Y" }}</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <span class="badge badge-{{ carte.statut }}" style="font-size:14px;padding:6px 14px;">{{ carte.get_statut_display }}</span>
+    {% if carte.statut == 'active' %}
+    <a href="/cartes/{{ carte.pk }}/deposer/" class="btn btn-primary">+ Remplir une case</a>
+    {% elif carte.statut == 'complete' %}
+    <a href="/cartes/{{ carte.pk }}/cloturer/" class="btn btn-gold">🏁 Clôturer la carte</a>
+    {% endif %}
+    <a href="/cartes/" class="btn btn-outline">← Retour</a>
+  </div>
+</div>
+
+<!-- Stats carte -->
+<div class="grid-4 mb-3">
+  <div class="stat-card">
+    <div class="stat-icon bg-primary-soft">🃏</div>
+    <div><div class="stat-value">{{ carte.cases_remplies }}<span style="font-size:14px;color:var(--text-muted);">/31</span></div><div class="stat-label">Cases remplies</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-gold-soft">💰</div>
+    <div><div class="stat-value" style="font-size:18px;">{{ carte.total_depose|floatformat:0 }}</div><div class="stat-label">FCFA déposés</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-success-soft">✅</div>
+    <div><div class="stat-value" style="font-size:18px;color:var(--success);">{{ carte.montant_client|floatformat:0 }}</div><div class="stat-label">FCFA pour le client</div></div>
+  </div>
+  <div class="stat-card" style="border-left:4px solid var(--gold);">
+    <div class="stat-icon bg-gold-soft">🏦</div>
+    <div>
+      {% with cases=carte.cases.all|dictsortreversed:"montant" %}
+      <div class="stat-value" style="font-size:18px;color:var(--gold);">
+        {% for c in cases %}{% if forloop.first %}{{ c.montant|floatformat:0 }}{% endif %}{% endfor %}
+      </div>
+      {% endwith %}
+      <div class="stat-label">FCFA case MF (plus élevée)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Barre de progression -->
+<div class="card mb-3">
+  <div class="card-body" style="padding:16px 20px;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-weight:600;">Progression : {{ carte.cases_remplies }}/31 cases</span>
+      <span style="font-weight:700;color:var(--primary);">{{ carte.progression_pct }}%</span>
+    </div>
+    <div class="progress" style="height:12px;">
+      <div class="progress-bar" style="width:{{ carte.progression_pct }}%;background:{% if carte.progression_pct == 100 %}var(--gold){% else %}var(--primary){% endif %};border-radius:6px;"></div>
+    </div>
+    {% if carte.statut == 'complete' %}
+    <div class="alert alert-warning mt-2" style="margin-bottom:0;">
+      🏁 <strong>Carte complète !</strong> Toutes les 31 cases ont été remplies. Procédez à la clôture pour verser les fonds au client.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- GRILLE 31 CASES -->
+<div class="card">
+  <div class="card-header">
+    <h5>Grille des 31 cases</h5>
+    <div style="font-size:12px;display:flex;gap:14px;color:var(--text-muted);">
+      <span style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;background:var(--primary);border-radius:3px;"></div>Remplie (client)</span>
+      <span style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;background:var(--gold);border-radius:3px;"></div>Revient à la MF</span>
+      <span style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border:2px dashed var(--primary);border-radius:3px;"></div>À remplir</span>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="grille-31">
+      {% for i in cases_range %}
+      {% with case=cases_remplies|default_if_none:"" %}
+      {% if i in cases_remplies %}
+        {% with c=cases_remplies|default_if_none:"" %}
+        <div class="case-btn remplie" title="Case {{ i }} — {{ cases_remplies[i].montant|floatformat:0 }} FCFA — {{ cases_remplies[i].date_depot|date:'d/m/Y' }}">
+          <span>{{ i }}</span>
+          <span class="case-montant">{{ cases_remplies|get_item:i }}</span>
+        </div>
+        {% endwith %}
+      {% else %}
+        {% if carte.statut == 'active' %}
+        <a href="/cartes/{{ carte.pk }}/deposer/?case={{ i }}" class="case-btn libre" title="Remplir la case {{ i }}">
+          <span>{{ i }}</span>
+          <span class="case-montant">libre</span>
+        </a>
+        {% else %}
+        <div class="case-btn vide">
+          <span>{{ i }}</span>
+        </div>
+        {% endif %}
+      {% endif %}
+      {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Historique des dépôts -->
+{% if carte.cases.all %}
+<div class="card mt-2">
+  <div class="card-header"><h5>📋 Historique des dépôts</h5></div>
+  <table class="table-mf">
+    <thead><tr><th>Case N°</th><th>Montant</th><th>Date</th><th>Caissier</th></tr></thead>
+    <tbody>
+      {% for case in carte.cases.all %}
+      <tr>
+        <td><span style="background:var(--primary);color:white;padding:2px 10px;border-radius:10px;font-weight:700;">{{ case.numero_case }}</span></td>
+        <td style="font-weight:700;">{{ case.montant|floatformat:0 }} FCFA</td>
+        <td style="font-size:12px;">{{ case.date_depot|date:"d/m/Y H:i" }}</td>
+        <td style="font-size:12px;color:var(--text-muted);">{{ case.caissier.get_full_name|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+<script>
+// Render cases properly
+document.querySelectorAll('.case-btn.remplie').forEach(btn => {
+  const n = parseInt(btn.querySelector('span').textContent);
+  const cases = {{ cases_remplies_json|default:'{}' }};
+  if (cases[n]) {
+    btn.querySelector('.case-montant').textContent = parseInt(cases[n]).toLocaleString('fr');
+  }
+});
+</script>
+{% endblock %}

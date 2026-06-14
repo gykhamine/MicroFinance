@@ -1,0 +1,48 @@
+{% extends "base/base.html" %}
+{% block title %}Types de crédit{% endblock %}
+{% block page_title %}Types de crédit{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📝 Types de crédit</h1></div><a href="/credits/" class="btn btn-outline">← Retour</a></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card">
+    <div class="card-header"><h5>Catalogue ({{ types|length }})</h5></div>
+    <table class="table-mf">
+      <thead><tr><th>Code</th><th>Nom</th><th>Taux/mois</th><th>Durée max</th><th>Montant max</th><th>Garantie</th></tr></thead>
+      <tbody>
+        {% for t in types %}
+        <tr>
+          <td><span style="font-family:monospace;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;">{{ t.code }}</span></td>
+          <td><div style="font-weight:600;">{{ t.nom }}</div><div style="font-size:11px;color:var(--text-muted);">{{ t.description|truncatechars:40 }}</div></td>
+          <td style="font-weight:700;color:var(--primary);">{{ t.taux_interet_mensuel }}%</td>
+          <td>{{ t.duree_max_mois }} mois</td>
+          <td>{{ t.montant_max|floatformat:0 }} FCFA</td>
+          <td>{% if t.garantie_requise %}<span class="badge badge-en_retard">Requise</span>{% else %}<span class="badge badge-active">Non requise</span>{% endif %}</td>
+        </tr>
+        {% empty %}<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">Aucun type.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>Ajouter un type</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="grid-2" style="gap:12px;margin-bottom:14px;">
+          <div><label class="form-label">Nom *</label><input type="text" name="nom" class="form-control" required placeholder="Crédit commercial"></div>
+          <div><label class="form-label">Code *</label><input type="text" name="code" class="form-control" required placeholder="COM" style="text-transform:uppercase;"></div>
+          <div><label class="form-label">Taux mensuel (%) *</label><input type="number" name="taux_interet_mensuel" class="form-control" required step="0.001" placeholder="2.5"></div>
+          <div><label class="form-label">Durée max (mois)</label><input type="number" name="duree_max_mois" class="form-control" value="24" min="1"></div>
+          <div><label class="form-label">Montant min (FCFA)</label><input type="number" name="montant_min" class="form-control" value="0"></div>
+          <div><label class="form-label">Montant max (FCFA)</label><input type="number" name="montant_max" class="form-control" value="5000000"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+          <input type="checkbox" name="garantie_requise" id="gar" style="width:16px;height:16px;" checked>
+          <label for="gar" style="font-size:13px;cursor:pointer;">Garantie requise</label>
+        </div>
+        <div class="mb-3"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+        <button type="submit" class="btn btn-primary w-100">+ Créer le type</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

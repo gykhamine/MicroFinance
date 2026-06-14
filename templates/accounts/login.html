@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connexion — MicroFinance ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-visual">
+    <div style="text-align:center;max-width:400px;">
+      <div style="font-size:72px;margin-bottom:24px;">🏦</div>
+      <h1 style="color:white;font-size:30px;font-weight:700;margin-bottom:12px;">MicroFinance ERP</h1>
+      <p style="color:rgba(255,255,255,0.7);font-size:15px;line-height:1.7;">Gestion complète — comptes, dépôts, retraits, transferts, crédits, carte 31 et épargne.</p>
+      <div style="display:flex;gap:10px;margin-top:28px;flex-wrap:wrap;justify-content:center;">
+        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 14px;color:rgba(255,255,255,0.85);font-size:13px;">🏦 Comptes</div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 14px;color:rgba(255,255,255,0.85);font-size:13px;">🃏 Carte 31</div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 14px;color:rgba(255,255,255,0.85);font-size:13px;">📄 Crédits</div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 14px;color:rgba(255,255,255,0.85);font-size:13px;">💸 Transferts</div>
+      </div>
+      <div style="margin-top:48px;color:rgba(255,255,255,0.3);font-size:12px;">Powered by Gykhamine Concept Investigation</div>
+    </div>
+  </div>
+  <div class="login-panel">
+    <div style="width:100%;max-width:340px;">
+      <div style="text-align:center;margin-bottom:32px;">
+        <div style="width:52px;height:52px;background:var(--primary);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;">🏦</div>
+        <h2 style="font-size:22px;font-weight:700;">Connexion</h2>
+        <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">Accédez à votre espace</p>
+      </div>
+      {% if error %}<div class="alert alert-danger">❌ {{ error }}</div>{% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-2"><label class="form-label">Nom d'utilisateur</label><input type="text" name="username" class="form-control" required autofocus placeholder="ex: caissier1"></div>
+        <div class="mb-3"><label class="form-label">Mot de passe</label><input type="password" name="password" class="form-control" required placeholder="••••••••"></div>
+        <button type="submit" class="btn btn-primary btn-lg w-100">Connexion →</button>
+      </form>
+      <div style="margin-top:28px;background:#f7fafc;border-radius:10px;padding:14px;font-size:12px;color:var(--text-muted);">
+        <div style="font-weight:700;margin-bottom:8px;color:var(--text);">Comptes démo :</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <span>👑 directeur / dir123</span><span>🏦 banque1 / banque123</span>
+          <span>💵 caissier1 / caisse123</span><span>📋 preteur1 / pret123</span>
+          <span>👤 client1 / client123</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

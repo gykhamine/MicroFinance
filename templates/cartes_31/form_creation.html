@@ -1,0 +1,75 @@
+{% extends "base/base.html" %}
+{% block title %}Nouvelle carte 31{% endblock %}
+{% block page_title %}Nouvelle carte 31{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🃏 Nouvelle carte 31</h1></div><a href="/cartes/" class="btn btn-outline">← Retour</a></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card">
+    <div class="card-header"><h5>Créer la carte</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="form-label">Client *</label>
+          <select name="client" class="form-select" id="sel-client" required onchange="updateComptes(this)">
+            <option value="">— Sélectionner un client —</option>
+            {% for c in clients %}
+            <option value="{{ c.pk }}" data-comptes='[{% for cp in c.comptes.all %}{"pk":{{ cp.pk }},"label":"{{ cp.type_compte.nom }} — {{ cp.numero }}","solde":"{{ cp.solde|floatformat:0 }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+              {{ c.utilisateur.get_full_name }} ({{ c.numero_client }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Compte lié *</label>
+          <select name="compte" class="form-select" id="sel-compte" required>
+            <option value="">— Choisir un client d'abord —</option>
+          </select>
+        </div>
+        <div class="mb-3"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2" placeholder="Objectif, remarques..."></textarea></div>
+        <button type="submit" class="btn btn-gold btn-lg w-100">🃏 Créer la carte 31</button>
+      </form>
+    </div>
+  </div>
+  <div class="card" style="border-top:4px solid var(--gold);">
+    <div class="card-header"><h5>ℹ️ Comment fonctionne la Carte 31</h5></div>
+    <div class="card-body" style="font-size:13px;">
+      <div style="display:grid;gap:14px;">
+        <div style="display:flex;gap:12px;">
+          <div style="width:28px;height:28px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">1</div>
+          <div><strong>31 cases</strong><br>La carte comporte 31 cases numérotées. Le client les remplit à son rythme en déposant le montant de son choix pour chaque case.</div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="width:28px;height:28px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">2</div>
+          <div><strong>Dépôt libre par case</strong><br>Chaque case peut avoir un montant différent. Le client choisit librement combien il dépose sur chaque case.</div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="width:28px;height:28px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">3</div>
+          <div><strong>Clôture à 31 cases</strong><br>Quand toutes les cases sont remplies, on clôture la carte. <strong>La case au montant le plus élevé revient à la microfinance</strong> (case 31). Le client récupère les 30 autres.</div>
+        </div>
+        <div style="background:var(--gold-light);border-radius:8px;padding:12px;border-left:4px solid var(--gold);">
+          <strong style="color:var(--gold);">Exemple :</strong><br>
+          Client dépose 30 cases × 5 000 FCFA + 1 case de 8 000 FCFA.<br>
+          Total déposé : 158 000 FCFA.<br>
+          <strong>La MF retient : 8 000 FCFA (la plus élevée)</strong><br>
+          Client reçoit : 150 000 FCFA.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function updateComptes(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const comptes = JSON.parse(opt.dataset.comptes || '[]');
+  const dest = document.getElementById('sel-compte');
+  dest.innerHTML = '<option value="">— Sélectionner un compte —</option>';
+  comptes.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.pk;
+    o.textContent = c.label + ' — Solde: ' + c.solde + ' FCFA';
+    dest.appendChild(o);
+  });
+}
+</script>
+{% endblock %}

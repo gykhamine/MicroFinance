@@ -1,0 +1,23 @@
+{% extends "base/base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🔔 Notifications</h1></div></div>
+<div class="card">
+  {% for n in notifications %}
+  <div style="display:flex;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);{% if not n.lue %}background:#f8fbff;{% endif %}">
+    <span style="font-size:22px;">{% if n.type_notif == 'alerte' %}⚠️{% elif n.type_notif == 'retard' %}🔴{% elif n.type_notif == 'carte' %}🃏{% else %}ℹ️{% endif %}</span>
+    <div style="flex:1;">
+      <div style="font-weight:{% if not n.lue %}700{% else %}500{% endif %};font-size:14px;">{{ n.titre }}</div>
+      <div style="font-size:13px;color:var(--text-muted);">{{ n.message }}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">{{ n.date|date:"d/m/Y à H:i" }}</div>
+    </div>
+  </div>
+  {% empty %}
+  <div style="text-align:center;padding:48px;color:var(--text-muted);">
+    <div style="font-size:48px;margin-bottom:12px;">🔔</div>
+    <div style="font-weight:600;">Aucune notification</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

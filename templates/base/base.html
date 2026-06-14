@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}MicroFinance ERP{% endblock %} — Gykhamine</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🏦</div>
+    <div><div class="logo-text">MicroFinance</div><div class="logo-sub">by Gykhamine</div></div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-section">Principal</div>
+    <a href="/dashboard/" class="sidebar-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <span class="icon">📊</span> Tableau de bord
+    </a>
+
+    {% if user.role != 'client' %}
+    <div class="sidebar-section">Bancaire</div>
+    <a href="/clients/" class="sidebar-item {% if '/clients' in request.path %}active{% endif %}">
+      <span class="icon">👥</span> Clients
+    </a>
+    <a href="/transactions/depot/" class="sidebar-item {% if 'depot' in request.path %}active{% endif %}">
+      <span class="icon">💰</span> Dépôt
+    </a>
+    <a href="/transactions/retrait/" class="sidebar-item {% if 'retrait' in request.path %}active{% endif %}">
+      <span class="icon">💸</span> Retrait
+    </a>
+    <a href="/transactions/transfert/" class="sidebar-item {% if 'transfert' in request.path %}active{% endif %}">
+      <span class="icon">🔄</span> Transfert
+    </a>
+    <a href="/transactions/journal/" class="sidebar-item {% if 'journal' in request.path %}active{% endif %}">
+      <span class="icon">📋</span> Journal
+    </a>
+    <div class="sidebar-section">Produits</div>
+    <a href="/cartes/" class="sidebar-item {% if '/cartes' in request.path %}active{% endif %}">
+      <span class="icon">🃏</span> Cartes 31
+      {% with nb=user.profil_client.cartes_31.filter|default:'' %}{% endwith %}
+    </a>
+    <a href="/credits/" class="sidebar-item {% if '/credits' in request.path %}active{% endif %}">
+      <span class="icon">📄</span> Crédits
+    </a>
+    <a href="/epargne/" class="sidebar-item {% if '/epargne' in request.path %}active{% endif %}">
+      <span class="icon">🪙</span> Épargne
+    </a>
+
+    {% if user.role == 'directeur' %}
+    <div class="sidebar-section">Direction</div>
+    <a href="/rapports/" class="sidebar-item {% if '/rapports' in request.path %}active{% endif %}">
+      <span class="icon">📈</span> Rapports
+    </a>
+    <a href="/transactions/taxes/" class="sidebar-item {% if 'taxes' in request.path %}active{% endif %}">
+      <span class="icon">⚙️</span> Taxes & Frais
+    </a>
+    <a href="/comptes/types/" class="sidebar-item {% if 'types' in request.path and 'comptes' in request.path %}active{% endif %}">
+      <span class="icon">🏷️</span> Types de comptes
+    </a>
+    <a href="/credits/types/" class="sidebar-item {% if 'types' in request.path and 'credits' in request.path %}active{% endif %}">
+      <span class="icon">📝</span> Types de crédit
+    </a>
+    <a href="/utilisateurs/" class="sidebar-item {% if '/utilisateurs' in request.path %}active{% endif %}">
+      <span class="icon">🔑</span> Utilisateurs
+    </a>
+    {% endif %}
+
+    {% else %}
+    <div class="sidebar-section">Mon espace</div>
+    <a href="/dashboard/" class="sidebar-item">
+      <span class="icon">🏦</span> Mes comptes
+    </a>
+    <a href="/cartes/" class="sidebar-item {% if '/cartes' in request.path %}active{% endif %}">
+      <span class="icon">🃏</span> Mes cartes 31
+    </a>
+    <a href="/credits/" class="sidebar-item {% if '/credits' in request.path %}active{% endif %}">
+      <span class="icon">📄</span> Mes crédits
+    </a>
+    <a href="/epargne/" class="sidebar-item {% if '/epargne' in request.path %}active{% endif %}">
+      <span class="icon">🪙</span> Mon épargne
+    </a>
+    {% endif %}
+
+    <div class="sidebar-section">Compte</div>
+    <a href="/notifications/" class="sidebar-item {% if '/notifications' in request.path %}active{% endif %}">
+      <span class="icon">🔔</span> Notifications
+      <span class="sidebar-badge" id="notif-badge" style="display:none">0</span>
+    </a>
+    <a href="/profil/" class="sidebar-item"><span class="icon">⚙️</span> Profil</a>
+  </div>
+  <div class="sidebar-footer">
+    <div style="color:rgba(255,255,255,0.8);font-weight:600;font-size:13px;">{{ user.get_full_name }}</div>
+    <div style="margin-top:2px;color:var(--gold);">{{ user.get_role_display }}</div>
+    <a href="/logout/" style="display:inline-block;margin-top:10px;color:rgba(255,255,255,0.4);font-size:12px;text-decoration:none;">→ Déconnexion</a>
+  </div>
+</nav>
+
+<header class="topbar">
+  <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+  <div class="topbar-right">
+    <a href="/notifications/" style="text-decoration:none;font-size:22px;position:relative;">
+      🔔<span id="notif-dot" style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--danger);border-radius:50%;display:none;"></span>
+    </a>
+    <div style="display:flex;align-items:center;gap:10px;background:var(--primary-light);border-radius:20px;padding:6px 14px;">
+      <span style="font-size:20px;">{{ user.get_role_icon }}</span>
+      <div>
+        <div style="font-size:13px;font-weight:600;">{{ user.get_full_name }}</div>
+        <div style="font-size:11px;color:var(--text-muted);">{{ user.get_role_display }}</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="main-content">
+{% if messages %}{% for msg in messages %}
+<div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %}">
+  {% if 'success' in msg.tags %}✅{% elif 'error' in msg.tags %}❌{% elif 'warning' in msg.tags %}⚠️{% else %}ℹ️{% endif %} {{ msg }}
+</div>
+{% endfor %}{% endif %}
+{% block content %}{% endblock %}
+</div>
+
+<script>
+async function checkNotifs() {
+  try {
+    const r = await fetch('/api/notifs/count/');
+    const d = await r.json();
+    const badge = document.getElementById('notif-badge');
+    const dot = document.getElementById('notif-dot');
+    if (d.count > 0) {
+      if (badge) { badge.style.display='inline'; badge.textContent=d.count; }
+      if (dot) dot.style.display='block';
+    } else {
+      if (badge) badge.style.display='none';
+      if (dot) dot.style.display='none';
+    }
+  } catch(e) {}
+}
+checkNotifs();
+setInterval(checkNotifs, 30000);
+
+function showToast(titre, msg, type) {
+  const c = {alerte:'#C62828',info:'#2E7D32',retard:'#E65100',carte:'#C9A84C'}[type]||'#0B3D91';
+  const t = document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:24px;right:24px;background:white;border-left:4px solid ${c};padding:16px 20px;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:9999;max-width:320px;font-size:13.5px;`;
+  t.innerHTML=`<div style="font-weight:700;margin-bottom:4px;color:${c}">${titre}</div><div style="color:#555">${msg}</div>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),5000);
+}
+try {
+  const ws = new WebSocket(`ws://${window.location.host}/ws/notifications/`);
+  ws.onmessage = e => { const d=JSON.parse(e.data); showToast(d.titre,d.message,d.type_notif); checkNotifs(); };
+} catch(e) {}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

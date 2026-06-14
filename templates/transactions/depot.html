@@ -1,0 +1,66 @@
+{% extends "base/base.html" %}
+{% block title %}Dépôt{% endblock %}
+{% block page_title %}Effectuer un dépôt{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>💰 Dépôt espèces</h1></div><a href="/dashboard/" class="btn btn-outline">← Retour</a></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card">
+    <div class="card-header"><h5>Informations</h5></div>
+    <div class="card-body">
+      <form method="post" id="form-depot">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="form-label">Client *</label>
+          <select name="compte" class="form-select" id="select-compte" required>
+            <option value="">— Sélectionner un compte —</option>
+            {% for client in clients %}
+            <optgroup label="{{ client.utilisateur.get_full_name }} ({{ client.numero_client }})">
+              {% for compte in client.comptes.all %}
+              {% if compte.statut == 'actif' %}
+              <option value="{{ compte.pk }}">{{ compte.type_compte.nom }} — {{ compte.numero }} — Solde: {{ compte.solde|floatformat:0 }} FCFA</option>
+              {% endif %}
+              {% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2"><label class="form-label">Montant (FCFA) *</label><input type="number" name="montant" id="montant-depot" class="form-control" required min="1" step="0.01" oninput="calcFrais()"></div>
+        <div class="mb-3"><label class="form-label">Description</label><input type="text" name="description" class="form-control" value="Dépôt espèces"></div>
+        <div id="preview-frais" style="display:none;background:var(--primary-light);border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;"><span>Montant déposé</span><strong id="pv-montant">—</strong></div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;color:var(--text-muted);"><span>Frais</span><span id="pv-frais">—</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-weight:700;color:var(--primary);"><span>Crédité sur le compte</span><span id="pv-net">—</span></div>
+        </div>
+        <button type="submit" class="btn btn-success btn-lg w-100">💰 Valider le dépôt</button>
+      </form>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>ℹ️ Guide dépôt</h5></div>
+    <div class="card-body">
+      <div style="display:grid;gap:12px;font-size:13px;">
+        <div style="padding:12px;background:#e8f5e9;border-radius:8px;border-left:4px solid var(--success);">
+          <strong>Dépôt normal</strong><br>Le montant est crédité directement sur le compte après déduction des frais éventuels.
+        </div>
+        <div style="padding:12px;background:var(--gold-light);border-radius:8px;border-left:4px solid var(--gold);">
+          <strong>Dépôt Carte 31</strong><br>Pour déposer sur une carte 31, passez par le menu <a href="/cartes/">Cartes 31 →</a>
+        </div>
+        <div style="padding:12px;background:var(--primary-light);border-radius:8px;border-left:4px solid var(--primary);">
+          <strong>Épargne programmée</strong><br>Pour un versement sur plan d'épargne, passez par le menu <a href="/epargne/">Épargne →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function calcFrais() {
+  const m = parseFloat(document.getElementById('montant-depot').value) || 0;
+  if (m > 0) {
+    document.getElementById('preview-frais').style.display='block';
+    document.getElementById('pv-montant').textContent = m.toLocaleString('fr') + ' FCFA';
+    document.getElementById('pv-frais').textContent = '0 FCFA (calculé à la validation)';
+    document.getElementById('pv-net').textContent = m.toLocaleString('fr') + ' FCFA (estimé)';
+  }
+}
+</script>
+{% endblock %}

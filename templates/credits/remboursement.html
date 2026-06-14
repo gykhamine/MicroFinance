@@ -1,0 +1,39 @@
+{% extends "base/base.html" %}
+{% block title %}Remboursement{% endblock %}
+{% block page_title %}Encaisser un remboursement{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>💳 Remboursement — Échéance {{ echeance.numero }}</h1><div class="breadcrumb">{{ echeance.demande.client }} • Crédit #{{ echeance.demande.pk }}</div></div><a href="/credits/{{ echeance.demande.pk }}/" class="btn btn-outline">← Retour</a></div>
+<div class="grid-2" style="align-items:start;">
+  <div class="card" style="border-left:4px solid var(--primary);">
+    <div class="card-body">
+      <div style="font-size:13px;display:grid;gap:8px;">
+        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Client</span><strong>{{ echeance.demande.client.utilisateur.get_full_name }}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Échéance N°</span><strong>{{ echeance.numero }}/{{ echeance.demande.duree_mois }}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Date d'échéance</span><strong {% if echeance.est_en_retard %}style="color:var(--danger);"{% endif %}>{{ echeance.date_echeance|date:"d/m/Y" }} {% if echeance.est_en_retard %}⚠️{% endif %}</strong></div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Principal</span><span>{{ echeance.montant_principal|floatformat:0 }} FCFA</span></div>
+        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Intérêt</span><span style="color:var(--warning);">{{ echeance.montant_interet|floatformat:0 }} FCFA</span></div>
+        {% if echeance.penalite > 0 %}<div style="display:flex;justify-content:space-between;"><span class="text-muted">Pénalité retard</span><span style="color:var(--danger);">{{ echeance.penalite|floatformat:0 }} FCFA</span></div>{% endif %}
+        <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:700;color:var(--primary);border-top:1px solid var(--border);padding-top:10px;">
+          <span>Reste à payer</span><span>{{ echeance.reste_a_payer|floatformat:0 }} FCFA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5>Encaisser le paiement</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Montant encaissé (FCFA) *</label>
+          <input type="number" name="montant" class="form-control" required step="0.01"
+            value="{{ echeance.reste_a_payer|floatformat:2 }}" style="font-size:20px;text-align:center;font-weight:700;">
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Solde compte : <strong>{{ echeance.demande.compte_decaissement.solde|floatformat:0 }} FCFA</strong></div>
+        </div>
+        <button type="submit" class="btn btn-success btn-lg w-100">✅ Enregistrer le remboursement</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
